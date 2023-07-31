@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shopping_list/data/categories.dart';
+import 'package:http/http.dart' as http;
 import 'package:shopping_list/models/grocery_item.dart';
 
 import '../models/category.dart';
@@ -14,29 +17,61 @@ class NewItemScreen extends StatefulWidget {
 }
 
 class _NewItemState extends State<NewItemScreen> {
-
   final _formKey = GlobalKey<FormState>();
   var enteredName = '';
   var quantity = 1;
   var selectedCategory = categories[Categories.vegetables];
+  var isSending = false;
 
- void _saveItem() {
-  if (_formKey.currentState!.validate()) {
-    _formKey.currentState!.save();
-    Navigator.of(context).pop(
-      GroceryItem(
-        name: enteredName,
-        quantity: quantity,
-        category: selectedCategory!,
-        id: DateTime.now().toString(),
-      ),
-    );
+
+  void _saveItem() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      setState(() {
+        isSending = true;
+      });
+      final url = Uri.https('flutter-prep-67067-default-rtdb.firebaseio.com',
+          'shopping_list.json');
+      final response = await http.post(
+        url,
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: jsonEncode(
+          {
+            'name': enteredName,
+            'quantity': quantity,
+            'category': selectedCategory!.title,
+          },
+        ),
+      );
+      print('Stampa della post :');
+      print(response.body);
+      print(response.statusCode);
+
+final Map<String, dynamic> resData = json.decode(response.body);
+
+
+      if(!context.mounted){
+        return;
+      }
+
+
+      Navigator.of(context).pop(
+        GroceryItem(id: resData['name'],
+         name: enteredName,
+          quantity: quantity,
+           category: selectedCategory!,
+           )
+      );
+
+    }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
+
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add a New Item'),
@@ -54,8 +89,7 @@ class _NewItemState extends State<NewItemScreen> {
                         value.isEmpty ||
                         value.trim().length <= 1 ||
                         value.trim().length >= 50)
-                    ? 
-                    'Must be between 1 and 50 characters'
+                    ? 'Must be between 1 and 50 characters'
                     : null,
                 onSaved: (value) => enteredName = value!,
               ),
@@ -72,7 +106,7 @@ class _NewItemState extends State<NewItemScreen> {
                       validator: (value) => (value == null ||
                               value.isEmpty ||
                               int.tryParse(value) == null ||
-                              int.parse(value) <= 0 )
+                              int.parse(value) <= 0)
                           ? 'Must be a valid, number positive integer. '
                           : null,
                       onSaved: (value) => quantity = int.parse(value!),
@@ -113,14 +147,14 @@ class _NewItemState extends State<NewItemScreen> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: () {
+                    onPressed: isSending ? null : () {
                       _formKey.currentState!.reset();
                     },
                     child: const Text('Reset'),
                   ),
                   ElevatedButton(
-                    onPressed: _saveItem,
-                    child: const Text('Add Item'),
+                    onPressed: isSending ? null : _saveItem,
+                    child: isSending ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator()) : const Text('Add'),
                   ),
                 ],
               ),

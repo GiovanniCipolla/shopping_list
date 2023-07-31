@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:shopping_list/widgets/grocery_list.dart';
 
 void main() {
-  runApp(const MyApp());
-}
+  runApp(
+    const MyApp(),
+  );
+} 
 
-class MyApp extends StatelessWidget  {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   // This widget is the root of your application.
@@ -19,7 +21,8 @@ class MyApp extends StatelessWidget  {
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color.fromARGB(255, 147, 229, 250),
           brightness: Brightness.dark,
-          surface: const Color.fromARGB(255, 42, 51, 59), //surface rappresenta il colore di sfondo per elementi interattivi come caselle di testo e card.
+          surface: const Color.fromARGB(255, 42, 51,
+              59), //surface rappresenta il colore di sfondo per elementi interattivi come caselle di testo e card.
         ),
         scaffoldBackgroundColor: const Color.fromARGB(255, 50, 58, 60),
       ),
